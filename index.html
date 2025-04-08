@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Browser Fingerprinter</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+        .info-container { background: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        pre { background: #eee; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .section-title { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>Ultimate Browser Fingerprinter</h1>
+    
+    <div class="info-container">
+        <h3>Basic</h3>
+        <pre id="BasicFingerprint">Collecting information...</pre>
+    </div>
+    
+    <div class="info-container">
+        <h3>Advanced:</h3>
+        <pre id="AdvancedFingerprint">-</pre>
+    </div>
+    
+    <div class="info-container">
+        <h3 class="section-title">Ultra</h3>
+        <pre id="UltraFingerprint">Collecting data...</pre>
+    </div>
+
+    <canvas id="canvas" width="300" height="100" class="hidden"></canvas>
+    <canvas id="webglCanvas" width="10" height="10" class="hidden"></canvas>
+
+	<button id="downloadBtn">Download JSON</button>
+    <script>
+        (function() {
+			// Basic
+			// Collect system information
+            const fingerprintB = {
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                gpuModel: getGPUModel(),
+                ram: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Not available',
+                cpuThreads: navigator.hardwareConcurrency || 'Not available',
+                browser: getBrowserInfo(),
+                os: getOSInfo(),
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            };
+
+            function getBrowserInfo() {
+                const userAgent = navigator.userAgent;
+                let browserName;
+                
+                if (userAgent.includes("Firefox")) browserName = "Firefox";
+                else if (userAgent.includes("SamsungBrowser")) browserName = "Samsung Browser";
+                else if (userAgent.includes("Opera") || userAgent.includes("OPR")) browserName = "Opera";
+                else if (userAgent.includes("Trident")) browserName = "Internet Explorer";
+                else if (userAgent.includes("Edge")) browserName = "Edge";
+                else if (userAgent.includes("Chrome")) browserName = "Chrome";
+                else if (userAgent.includes("Safari")) browserName = "Safari";
+                else browserName = "Unknown";
+                
+                return browserName;
+            }
+
+            function getOSInfo() {
+                const userAgent = navigator.userAgent;
+                let osName;
+                
+                if (userAgent.includes("Windows")) osName = "Windows";
+                else if (userAgent.includes("Mac")) osName = "MacOS";
+                else if (userAgent.includes("Linux")) osName = "Linux";
+                else if (userAgent.includes("Android")) osName = "Android";
+                else if (userAgent.includes("iOS")) osName = "iOS";
+                else osName = "Unknown";
+                
+                return osName;
+            }
+
+            function getGPUModel() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (!gl) return 'WebGL not supported';
+                    
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    if (debugInfo) {
+                        return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    }
+                    return 'GPU info not available (WebGL debug extension missing)';
+                } catch (e) {
+                    return 'GPU detection failed';
+                }
+            }
+
+            function getCanvasFingerprintB() {
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Draw some text with subtle differences
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillStyle = 'rgb(128, 128, 128)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgb(255, 0, 0)';
+                ctx.fillText('CTest', 2, 8);
+                
+                // Add more complexity to the fingerprint
+                ctx.fillStyle = 'rgb(0, 255, 0)';
+                ctx.fillRect(20, 15, 50, 10);
+                ctx.fillStyle = 'rgb(0, 0, 255)';
+                ctx.fillText('✓', 5, 20);
+                
+                // Get the image data and hash it
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                const hash = hashDataB(imageData);
+                
+                return {
+                    imageData: imageData,
+                    hash: hash
+                };
+            }
+
+            function hashDataB(data) {
+                // Simple hash function for demonstration
+                let hash = 0;
+                for (let i = 0; i < data.length; i++) {
+                    hash = (hash << 5) - hash + data[i];
+                    hash |= 0; // Convert to 32bit integer
+                }
+                return 'fp-' + Math.abs(hash).toString(16);
+            }
+			
+			// Advanced
+			function getCanvasFingerprintA() { // 1. Enhanced Canvas Fingerprinting
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Draw complex shapes with gradients
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#ff0000');
+                gradient.addColorStop(0.5, '#00ff00');
+                gradient.addColorStop(1, '#0000ff');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw text with multiple fonts
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillStyle = 'rgb(255, 255, 255)';
+                ctx.font = '18px Arial, sans-serif';
+                ctx.fillText('Advanced Fingerprint ✓ 你好 こんにちは', 10, 25);
+                
+                // Draw complex path
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(50, 50, 25, 0, Math.PI * 2, true);
+                ctx.stroke();
+                
+                // Add image processing
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.filter = 'blur(0.5px)';
+                
+                return hashData(ctx.getImageData(0, 0, canvas.width, canvas.height).data);
+            }
+
+            function getFontList() { // 2. Font Detection
+                const fonts = [
+                    'Arial', 'Arial Black', 'Courier New', 'Times New Roman',
+                    'Comic Sans MS', 'Verdana', 'Georgia', 'Palatino',
+                    'Garamond', 'Bookman', 'Tahoma', 'Trebuchet MS',
+                    'Impact', 'Symbol', 'Wingdings', 'MS Sans Serif',
+                    'MS Serif', 'Segoe UI', 'Apple Color Emoji'
+                ];
+                
+                const available = [];
+                const span = document.createElement('span');
+                span.style.fontSize = '24px';
+                span.innerHTML = 'mmMwWLliI0O&1';
+                
+                document.body.appendChild(span);
+                
+                const defaultWidth = span.offsetWidth;
+                
+                fonts.forEach(font => {
+                    span.style.fontFamily = font + ',monospace';
+                    if (span.offsetWidth !== defaultWidth) {
+                        available.push(font);
+                    }
+                });
+                
+                document.body.removeChild(span);
+                return available;
+            }
+
+            function getWebGLFingerprintA() { // 3. WebGL Fingerprinting
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (!gl) return null;
+                    
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    return {
+                        vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : null,
+                        renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : null,
+                        extensions: gl.getSupportedExtensions(),
+                        maxParameters: [
+                            gl.getParameter(gl.MAX_TEXTURE_SIZE),
+                            gl.getParameter(gl.MAX_VIEWPORT_DIMS)
+                        ]
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function getAudioFingerprintA() { // 4. AudioContext Fingerprinting
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const analyser = audioContext.createAnalyser();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(analyser);
+                    analyser.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.value = 10000;
+                    
+                    const timeDomainData = new Float32Array(analyser.fftSize);
+                    analyser.getFloatTimeDomainData(timeDomainData);
+                    
+                    return hashData(timeDomainData);
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function getPerformanceMetrics() { // 5. Performance Timing
+                const timing = window.performance.timing;
+                const metrics = {};
+                
+                if (timing) {
+                    metrics.pageLoad = timing.loadEventEnd - timing.navigationStart;
+                    metrics.domReady = timing.domComplete - timing.domLoading;
+                }
+                
+                metrics.memory = window.performance.memory ? {
+                    jsHeapSizeLimit: window.performance.memory.jsHeapSizeLimit,
+                    totalJSHeapSize: window.performance.memory.totalJSHeapSize,
+                    usedJSHeapSize: window.performance.memory.usedJSHeapSize
+                } : null;
+                
+                return metrics;
+            }
+
+            function hashData(data) { // Hashing function (SHA-1 simulation - in production use crypto.subtle.digest)
+                let hash = 0;
+                const str = typeof data === 'string' ? data : JSON.stringify(data);
+                
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = (hash << 5) - hash + char;
+                    hash |= 0; // Convert to 32bit integer
+                }
+                
+                return 'fp-' + Math.abs(hash).toString(36) + '-' + str.length.toString(36);
+            }
+
+			function generateFingerprintA() { // Generate composite fingerprint
+                const fingerprint = {
+                    canvas: getCanvasFingerprintA(),
+                    fonts: getFontList(),
+                    webgl: getWebGLFingerprintA(),
+                    audio: getAudioFingerprintA(),
+                    performance: getPerformanceMetrics(),
+                    screen: {
+                        width: window.screen.width,
+                        height: window.screen.height,
+                        colorDepth: window.screen.colorDepth,
+                        pixelRatio: window.devicePixelRatio
+                    },
+                    platform: navigator.platform,
+                    userAgent: navigator.userAgent,
+                    hardwareConcurrency: navigator.hardwareConcurrency,
+                    deviceMemory: navigator.deviceMemory,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    languages: navigator.languages,
+                    cookiesEnabled: navigator.cookieEnabled,
+                    doNotTrack: navigator.doNotTrack,
+                    touchSupport: 'ontouchstart' in window
+                };
+                
+                fingerprint.compositeHash = hashData(JSON.stringify(fingerprint));
+                return fingerprint;
+            }
+			
+			// Ultra
+            function getCanvasFingerprint() { // 1. Supercharged Canvas Fingerprinting
+                try {
+                    const canvas = document.getElementById('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Draw complex multi-layer composition
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.fillStyle = 'rgb(128, 128, 128)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Text with multiple fonts and languages
+                    ctx.font = '18px "Arial", "Helvetica", sans-serif';
+                    ctx.fillStyle = 'rgb(255, 0, 0)';
+                    ctx.fillText('Browser Fingerprint 你好 こんにちは مرحبا', 10, 30);
+                    
+                    ctx.font = 'italic 16px "Times New Roman"';
+                    ctx.fillStyle = 'rgba(0, 0, 255, 0.7)';
+                    ctx.fillText('Uniqueness Test ✓ ⚡ ❤', 10, 60);
+                    
+                    // Complex shapes with transformations
+                    ctx.translate(50, 80);
+                    ctx.rotate(Math.PI / 8);
+                    ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.resetTransform();
+                    
+                    // Image processing effects
+                    ctx.filter = 'blur(0.8px) contrast(120%)';
+                    ctx.globalAlpha = 0.9;
+                    ctx.drawImage(canvas, 0, 0);
+                    ctx.filter = 'none';
+                    ctx.globalAlpha = 1.0;
+                    
+                    return hashData(ctx.getImageData(0, 0, canvas.width, canvas.height).data);
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            function getWebGLFingerprint() { // 2. WebGL Deep Fingerprinting
+                try {
+                    const canvas = document.getElementById('webglCanvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (!gl) return null;
+                    
+                    // Vertex shader with precision testing
+                    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+                    gl.shaderSource(vertexShader, `
+                        precision highp float;
+                        attribute vec2 position;
+                        void main() {
+                            gl_Position = vec4(position, 0.0, 1.0);
+                        }
+                    `);
+                    gl.compileShader(vertexShader);
+                    
+                    // Fragment shader with math precision testing
+                    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+                    gl.shaderSource(fragmentShader, `
+                        precision highp float;
+                        void main() {
+                            float n = 0.0;
+                            for (float i = 0.0; i < 10.0; i++) {
+                                n += 0.1;
+                            }
+                            gl_FragColor = vec4(n, 0.0, 0.0, 1.0);
+                        }
+                    `);
+                    gl.compileShader(fragmentShader);
+                    
+                    // Program and rendering
+                    const program = gl.createProgram();
+                    gl.attachShader(program, vertexShader);
+                    gl.attachShader(program, fragmentShader);
+                    gl.linkProgram(program);
+                    gl.useProgram(program);
+                    
+                    // Get WebGL parameters
+                    const params = {};
+                    const parameters = [
+                        'VENDOR', 'RENDERER', 'VERSION', 'SHADING_LANGUAGE_VERSION',
+                        'MAX_TEXTURE_SIZE', 'MAX_VIEWPORT_DIMS', 'MAX_RENDERBUFFER_SIZE'
+                    ];
+                    
+                    parameters.forEach(param => {
+                        try {
+                            params[param] = gl.getParameter(gl[param]);
+                        } catch (e) {}
+                    });
+                    
+                    // Get precision artifacts
+                    const framebuffer = gl.createFramebuffer();
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+                    const texture = gl.createTexture();
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+                    gl.drawArrays(gl.POINTS, 0, 1);
+                    const pixel = new Uint8Array(4);
+                    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+                    
+                    return {
+                        parameters: params,
+                        precisionTest: pixel[0],
+                        extensions: gl.getSupportedExtensions(),
+                        debugInfo: gl.getExtension('WEBGL_debug_renderer_info') ? {
+                            vendor: gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_VENDOR_WEBGL),
+                            renderer: gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_RENDERER_WEBGL)
+                        } : null
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            function getAudioFingerprint() { // 3. AudioContext Fingerprint with Frequency Analysis
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const analyser = audioContext.createAnalyser();
+                    const gainNode = audioContext.createGain();
+                    const compressor = audioContext.createDynamicsCompressor();
+                    
+                    oscillator.connect(analyser);
+                    analyser.connect(compressor);
+                    compressor.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.value = 10000;
+                    oscillator.start();
+                    
+                    // Frequency analysis
+                    const freqData = new Uint8Array(analyser.frequencyBinCount);
+                    analyser.getByteFrequencyData(freqData);
+                    
+                    // Time domain analysis
+                    const timeData = new Float32Array(analyser.fftSize);
+                    analyser.getFloatTimeDomainData(timeData);
+                    
+                    oscillator.stop();
+                    audioContext.close();
+                    
+                    return {
+                        frequencyHash: hashData(freqData),
+                        timeDomainHash: hashData(timeData),
+                        compressor: {
+                            reduction: compressor.reduction,
+                            threshold: compressor.threshold.value,
+                            ratio: compressor.ratio.value
+                        }
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            async function getHardwareFingerprint() { // 4. Hardware Performance Fingerprint
+                try {
+                    // CPU benchmark
+                    const cpuScore = await benchmarkCPU();
+                    
+                    // Memory benchmark
+                    const memoryScore = await benchmarkMemory();
+                    
+                    // GPU benchmark
+                    const gpuScore = await benchmarkGPU();
+                    
+                    return {
+                        cpuScore,
+                        memoryScore,
+                        gpuScore,
+                        hardwareConcurrency: navigator.hardwareConcurrency,
+                        deviceMemory: navigator.deviceMemory
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            function getInstalledFonts() { // 5. Installed Fonts Detection (Enhanced)
+                const fontList = [
+                    // Windows fonts
+                    'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New', 
+                    'Georgia', 'Impact', 'Times New Roman', 'Trebuchet MS',
+                    'Verdana', 'Webdings', 'Symbol', 'MS Sans Serif',
+                    
+                    // Mac fonts
+                    'American Typewriter', 'Andale Mono', 'Avenir', 'Baskerville',
+                    'Brush Script MT', 'Chalkboard', 'Chalkduster', 'Cochin',
+                    'Copperplate', 'Didot', 'Futura', 'Gill Sans',
+                    
+                    // Linux fonts
+                    'DejaVu Sans', 'Liberation Sans', 'FreeSans', 'Ubuntu',
+                    
+                    // System UI fonts
+                    '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto',
+                    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+                    
+                    // Special/Unicode fonts
+                    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji',
+                    'Wingdings', 'Zapf Dingbats'
+                ];
+                
+                const availableFonts = [];
+                const testString = 'mmMwWLliI0O@&!Qq#$%^1234567890';
+                const testSize = '20px';
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Get default width
+                context.font = testSize + ' monospace';
+                const defaultWidth = context.measureText(testString).width;
+                
+                // Test each font
+                fontList.forEach(font => {
+                    context.font = testSize + ' "' + font + '", monospace';
+                    if (context.measureText(testString).width !== defaultWidth) {
+                        availableFonts.push(font);
+                    }
+                });
+                
+                // Test for Chinese/Japanese/Korean support
+                const cjkTest = () => {
+                    const cjkChars = '你好こんにちは안녕하세요';
+                    context.font = testSize + ' monospace';
+                    const defaultCJKWidth = context.measureText(cjkChars).width;
+                    
+                    ['Noto Sans CJK', 'Microsoft YaHei', 'Meiryo', 'Malgun Gothic', 'Hiragino Sans'].forEach(font => {
+                        context.font = testSize + ' "' + font + '", monospace';
+                        if (context.measureText(cjkChars).width !== defaultCJKWidth) {
+                            availableFonts.push(font);
+                        }
+                    });
+                };
+                
+                cjkTest();
+                return availableFonts;
+            }
+            
+            function getBatteryStatus() { // 6. Battery Status API (Deprecated but still useful)
+                return new Promise(resolve => {
+                    if ('getBattery' in navigator) {
+                        navigator.getBattery().then(battery => {
+                            resolve({
+                                level: battery.level,
+                                charging: battery.charging,
+                                chargingTime: battery.chargingTime,
+                                dischargingTime: battery.dischargingTime
+                            });
+                        }).catch(() => resolve(null));
+                    } else {
+                        resolve(null);
+                    }
+                });
+            }
+            
+            function getNetworkInfo() { // 7. Network Information API
+                const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                return connection ? {
+                    downlink: connection.downlink,
+                    effectiveType: connection.effectiveType,
+                    rtt: connection.rtt,
+                    saveData: connection.saveData,
+                    type: connection.type
+                } : null;
+            }
+            
+            function getScreenDetails() { // 8. Screen Characteristics
+                return {
+                    width: window.screen.width,
+                    height: window.screen.height,
+                    colorDepth: window.screen.colorDepth,
+                    pixelDepth: window.screen.pixelDepth,
+                    orientation: window.screen.orientation ? window.screen.orientation.type : null,
+                    availWidth: window.screen.availWidth,
+                    availHeight: window.screen.availHeight,
+                    devicePixelRatio: window.devicePixelRatio,
+                    touchSupport: 'ontouchstart' in window,
+                    maxTouchPoints: navigator.maxTouchPoints || 0
+                };
+            }
+            
+            function getPlugins() { // 9. Plugin and MIME Type Detection
+                const plugins = [];
+                for (let i = 0; i < navigator.plugins.length; i++) {
+                    plugins.push({
+                        name: navigator.plugins[i].name,
+                        description: navigator.plugins[i].description,
+                        filename: navigator.plugins[i].filename,
+                        length: navigator.plugins[i].length
+                    });
+                }
+                
+                const mimeTypes = [];
+                for (let i = 0; i < navigator.mimeTypes.length; i++) {
+                    mimeTypes.push({
+                        type: navigator.mimeTypes[i].type,
+                        description: navigator.mimeTypes[i].description,
+                        suffixes: navigator.mimeTypes[i].suffixes
+                    });
+                }
+                
+                return {
+                    plugins,
+                    mimeTypes,
+                    pdfViewerEnabled: navigator.pdfViewerEnabled || false,
+                    cookieEnabled: navigator.cookieEnabled,
+                    doNotTrack: navigator.doNotTrack
+                };
+            }
+            
+            function getWebRTCIP() { // 10. WebRTC IP Leak Test
+                return new Promise(resolve => {
+                    try {
+                        const rtcConfig = {
+                            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                        };
+                        
+                        const pc = new RTCPeerConnection(rtcConfig);
+                        pc.createDataChannel('fingerprint');
+                        pc.createOffer()
+                            .then(offer => pc.setLocalDescription(offer))
+                            .catch(() => resolve(null));
+                        
+                        pc.onicecandidate = ice => {
+                            if (!ice || !ice.candidate || !ice.candidate.candidate) {
+                                resolve(null);
+                                return;
+                            }
+                            
+                            const candidate = ice.candidate.candidate;
+                            const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+                            const ipMatch = candidate.match(ipRegex);
+                            
+                            resolve(ipMatch ? ipMatch[1] : null);
+                            pc.close();
+                        };
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
+            }
+            
+            async function getStorageInfo() { // 11. Storage Quota and Persistence
+                try {
+                    if ('storage' in navigator && 'estimate' in navigator.storage) {
+                        const estimate = await navigator.storage.estimate();
+                        const persisted = await navigator.storage.persisted();
+                        return {
+                            quota: estimate.quota,
+                            usage: estimate.usage,
+                            persisted,
+                            usageDetails: estimate.usageDetails
+                        };
+                    }
+                    return null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            function getSensorInfo() { // 12. Sensor API Access
+                return {
+                    accelerometer: 'Accelerometer' in window,
+                    gyroscope: 'Gyroscope' in window,
+                    magnetometer: 'Magnetometer' in window,
+                    ambientLight: 'AmbientLightSensor' in window,
+                    proximity: 'ProximitySensor' in window,
+                    orientation: 'DeviceOrientationEvent' in window,
+                    motion: 'DeviceMotionEvent' in window
+                };
+            }
+            
+            async function benchmarkCPU() { // Benchmarking Functions
+                const start = performance.now();
+                let sum = 0;
+                for (let i = 0; i < 1000000; i++) {
+                    sum += Math.sqrt(i) * Math.tan(i);
+                }
+                return performance.now() - start;
+            }
+
+            async function benchmarkMemory() {
+                const start = performance.now();
+                const array = [];
+                for (let i = 0; i < 100000; i++) {
+                    array.push(new Array(100).join('x'));
+                }
+                return performance.now() - start;
+            }
+
+            async function benchmarkGPU() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl');
+                    if (!gl) return null;
+                    
+                    const start = performance.now();
+                    const buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+                    const data = new Float32Array(100000);
+                    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+                    return performance.now() - start;
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            function hashData(data) { // Hashing function (simplified - in production use crypto.subtle.digest)
+                let hash = 0;
+                const str = typeof data === 'string' ? data : JSON.stringify(data);
+                
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = (hash << 7) - hash + char;
+                    hash |= 0; // Convert to 32bit integer
+                }
+                
+                return 'fp-' + Math.abs(hash).toString(36) + '-' + str.length.toString(36);
+            }
+            
+            async function generateFingerprint() { // Generate comprehensive fingerprint
+                const fingerprint = {
+                    canvas: getCanvasFingerprint(),
+                    webgl: getWebGLFingerprint(),
+                    audio: getAudioFingerprint(),
+                    hardware: await getHardwareFingerprint(),
+                    fonts: getInstalledFonts(),
+                    battery: await getBatteryStatus(),
+                    network: getNetworkInfo(),
+                    screen: getScreenDetails(),
+                    plugins: getPlugins(),
+                    webRTC: await getWebRTCIP(),
+                    storage: await getStorageInfo(),
+                    sensors: getSensorInfo(),
+                    platform: navigator.platform,
+                    userAgent: navigator.userAgent,
+                    languages: navigator.languages,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    sessionStorage: !!window.sessionStorage,
+                    localStorage: !!window.localStorage,
+                    indexedDB: !!window.indexedDB,
+                    cookiesEnabled: navigator.cookieEnabled,
+                    doNotTrack: navigator.doNotTrack,
+                    pdfViewerEnabled: navigator.pdfViewerEnabled,
+                    hardwareConcurrency: navigator.hardwareConcurrency,
+                    deviceMemory: navigator.deviceMemory,
+                    maxTouchPoints: navigator.maxTouchPoints || 0,
+                    vendor: navigator.vendor,
+                    product: navigator.product,
+                    productSub: navigator.productSub,
+                    cookieEnabled: navigator.cookieEnabled,
+                    appVersion: navigator.appVersion,
+                    cpuClass: navigator.cpuClass
+                };
+                
+                fingerprint.compositeHash = hashData(JSON.stringify(fingerprint));
+                return fingerprint;
+            }
+
+            // Generate and display basic fingerprint
+            const cnvs = getCanvasFingerprintB(); // generate Basic
+            fingerprintB.cnvs = cnvs.hash;
+            document.getElementById('BasicFingerprint').textContent = JSON.stringify(fingerprintB, null, 2);
+            
+            const fingerprintA = generateFingerprintA(); // generate Advanced
+            
+            generateFingerprint().then(fingerprint => { // generate & display Ultra
+                document.getElementById('UltraFingerprint').textContent = 
+                    JSON.stringify(fingerprint, null, 2);
+            });
+            
+			document.getElementById('AdvancedFingerprint').textContent = JSON.stringify(fingerprintA, null, 2); 
+            
+            function downloadJSON() {
+				
+				const jsonData = {
+					Basic: document.getElementById('BasicFingerprint').textContent
+					Advanced: document.getElementById('AdvancedFingerprint').textContent
+					Ultra: document.getElementById('UltraFingerprint').textContent
+				};
+				const blob = new Blob([jsonData], { type: 'application/json' });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = 'report.json'; // Set the file name
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url); // Clean up the URL object
+			}
+			
+			// Adding event listener to the button
+			document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
+        })();
+    </script>
+</body>
+</html>
