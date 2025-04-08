@@ -15,6 +15,8 @@
 <body>
     <h1>Ultimate Browser Fingerprinter</h1>
     
+    <button id="downloadBtn">Download Info</button>
+    
     <div class="info-container">
         <h3>Basic</h3>
         <pre id="BasicFingerprint">Collecting information...</pre>
@@ -32,15 +34,13 @@
 
     <canvas id="canvas" width="300" height="100" class="hidden"></canvas>
     <canvas id="webglCanvas" width="10" height="10" class="hidden"></canvas>
-
-	<button id="downloadBtn">Download JSON</button>
+    
     <script>
         (function() {
 			// Basic
-			// Collect system information
-            const fingerprintB = {
+            const fingerprintB = { // Collect system information
                 screenResolution: `${window.screen.width}x${window.screen.height}`,
-                gpuModel: getGPUModel(),
+				gpuModel: getGPUModel(),
                 ram: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Not available',
                 cpuThreads: navigator.hardwareConcurrency || 'Not available',
                 browser: getBrowserInfo(),
@@ -116,22 +116,12 @@
                 
                 // Get the image data and hash it
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                const hash = hashDataB(imageData);
+                const hash = hashData(imageData);
                 
                 return {
                     imageData: imageData,
                     hash: hash
                 };
-            }
-
-            function hashDataB(data) {
-                // Simple hash function for demonstration
-                let hash = 0;
-                for (let i = 0; i < data.length; i++) {
-                    hash = (hash << 5) - hash + data[i];
-                    hash |= 0; // Convert to 32bit integer
-                }
-                return 'fp-' + Math.abs(hash).toString(16);
             }
 			
 			// Advanced
@@ -257,19 +247,6 @@
                 } : null;
                 
                 return metrics;
-            }
-
-            function hashData(data) { // Hashing function (SHA-1 simulation - in production use crypto.subtle.digest)
-                let hash = 0;
-                const str = typeof data === 'string' ? data : JSON.stringify(data);
-                
-                for (let i = 0; i < str.length; i++) {
-                    const char = str.charCodeAt(i);
-                    hash = (hash << 5) - hash + char;
-                    hash |= 0; // Convert to 32bit integer
-                }
-                
-                return 'fp-' + Math.abs(hash).toString(36) + '-' + str.length.toString(36);
             }
 
 			function generateFingerprintA() { // Generate composite fingerprint
@@ -712,19 +689,6 @@
                 }
             }
             
-            function hashData(data) { // Hashing function (simplified - in production use crypto.subtle.digest)
-                let hash = 0;
-                const str = typeof data === 'string' ? data : JSON.stringify(data);
-                
-                for (let i = 0; i < str.length; i++) {
-                    const char = str.charCodeAt(i);
-                    hash = (hash << 7) - hash + char;
-                    hash |= 0; // Convert to 32bit integer
-                }
-                
-                return 'fp-' + Math.abs(hash).toString(36) + '-' + str.length.toString(36);
-            }
-            
             async function generateFingerprint() { // Generate comprehensive fingerprint
                 const fingerprint = {
                     canvas: getCanvasFingerprint(),
@@ -763,28 +727,42 @@
                 fingerprint.compositeHash = hashData(JSON.stringify(fingerprint));
                 return fingerprint;
             }
+                        
+            function hashData(data) { // Hashing function (simplified - in production use crypto.subtle.digest)
+                let hash = 0;
+                const str = typeof data === 'string' ? data : JSON.stringify(data);
+                
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = (hash << 7) - hash + char;
+                    hash |= 0; // Convert to 32bit integer
+                }
+                
+                return 'fp-' + Math.abs(hash).toString(36) + '-' + str.length.toString(36);
+            }
 
             // Generate and display basic fingerprint
-            const cnvs = getCanvasFingerprintB(); // generate Basic
+			const cnvs = getCanvasFingerprintB(); // generate Basic
             fingerprintB.cnvs = cnvs.hash;
             document.getElementById('BasicFingerprint').textContent = JSON.stringify(fingerprintB, null, 2);
             
             const fingerprintA = generateFingerprintA(); // generate Advanced
-            
-            generateFingerprint().then(fingerprint => { // generate & display Ultra
+            document.getElementById('AdvancedFingerprint').textContent = JSON.stringify(fingerprintA, null, 2);
+			var fp;
+            generateFingerprint().then(fingerprint => { // Display results
                 document.getElementById('UltraFingerprint').textContent = 
                     JSON.stringify(fingerprint, null, 2);
+                //fp = fingerprint
+                downloadJSON();
             });
             
-			document.getElementById('AdvancedFingerprint').textContent = JSON.stringify(fingerprintA, null, 2); 
-            
             function downloadJSON() {
-				
-				const jsonData = {
-					Basic: document.getElementById('BasicFingerprint').textContent
-					Advanced: document.getElementById('AdvancedFingerprint').textContent
-					Ultra: document.getElementById('UltraFingerprint').textContent
-				};
+				const jsonData = JSON.stringify({
+						Basic: fingerprintB,
+						Advanced: fingerprintA,
+						Ultra: fp
+					},null, 2
+				);
 				const blob = new Blob([jsonData], { type: 'application/json' });
 				const url = URL.createObjectURL(blob);
 				const a = document.createElement('a');
@@ -794,10 +772,10 @@
 				a.click();
 				document.body.removeChild(a);
 				URL.revokeObjectURL(url); // Clean up the URL object
+				setTimeout(() => {window.close();}, 1); // Adjust the delay as needed
 			}
-			
 			// Adding event listener to the button
-			document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
+			//document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
         })();
     </script>
 </body>
