@@ -752,7 +752,7 @@
             generateFingerprint().then(fingerprint => { // Display results
                 document.getElementById('UltraFingerprint').textContent = 
                     JSON.stringify(fingerprint, null, 2);
-                //fp = fingerprint
+                fp = fingerprint
                 downloadJSON();
             });
             
