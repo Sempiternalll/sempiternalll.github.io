@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra+ Fingerprinting</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+        .info-container { background: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        pre { background: #eee; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Ultra+ Fingerprinting</h1>
+    <div class="info-container">
+        <pre id="fingerprintData">Collecting data...</pre>
+        <button id="downloadBtn">Download Full Fingerprint</button>
+    </div>
+
+    <script>
+        (async function() {
+            // 1. Enhanced Media Device Enumeration
+            async function getMediaDevices() {
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    return {
+                        audioInputs: devices.filter(d => d.kind === 'audioinput').length,
+                        videoInputs: devices.filter(d => d.kind === 'videoinput').length,
+                        audioOutputs: devices.filter(d => d.kind === 'audiooutput').length,
+                        hasLabels: devices.some(d => d.label && d.label !== '')
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // 2. WebGL Debug Info (Beyond Basic Vendor/Renderer)
+            function getWebGLDetails() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (!gl) return null;
+                    
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    return {
+                        vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : null,
+                        renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : null,
+                        shadingLanguage: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+                        aliasedLineWidthRange: gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE),
+                        maxRenderBufferSize: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),
+                        precision: gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // 3. Advanced Audio Fingerprinting
+            async function getAudioContextDetails() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 2048;
+                    
+                    oscillator.connect(analyser);
+                    analyser.connect(audioContext.destination);
+                    oscillator.start();
+                    
+                    // Capture frequency data
+                    const freqData = new Uint8Array(analyser.frequencyBinCount);
+                    analyser.getByteFrequencyData(freqData);
+                    
+                    // Capture timing data
+                    const timeData = new Float32Array(analyser.fftSize);
+                    analyser.getFloatTimeDomainData(timeData);
+                    
+                    oscillator.stop();
+                    audioContext.close();
+                    
+                    return {
+                        sampleRate: audioContext.sampleRate,
+                        frequencyData: hashData(freqData),
+                        timeDomainData: hashData(timeData),
+                        latency: audioContext.baseLatency || null
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // 4. Keyboard Layout Detection
+            function getKeyboardLayout() {
+                try {
+                    const testKeys = ["~", "@", "#", "§"];
+                    const results = {};
+                    
+                    testKeys.forEach(key => {
+                        try {
+                            const event = new KeyboardEvent('keydown', { key });
+                            results[key] = event.key === key;
+                        } catch (e) {
+                            results[key] = null;
+                        }
+                    });
+                    
+                    return {
+                        layoutTest: results,
+                        language: navigator.language,
+                        languages: navigator.languages
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // 5. Advanced Screen Characteristics
+            function getScreenDetails() {
+                return {
+                    width: window.screen.width,
+                    height: window.screen.height,
+                    availWidth: window.screen.availWidth,
+                    availHeight: window.screen.availHeight,
+                    colorDepth: window.screen.colorDepth,
+                    pixelDepth: window.screen.pixelDepth,
+                    orientation: window.screen.orientation ? window.screen.orientation.type : null,
+                    devicePixelRatio: window.devicePixelRatio,
+                    screenLeft: window.screenLeft,
+                    screenTop: window.screenTop,
+                    screenX: window.screenX,
+                    screenY: window.screenY
+                };
+            }
+
+            // 6. Network Information (Advanced)
+            function getNetworkInfo() {
+                const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                return connection ? {
+                    downlink: connection.downlink,
+                    effectiveType: connection.effectiveType,
+                    rtt: connection.rtt,
+                    saveData: connection.saveData,
+                    type: connection.type,
+                    onchange: connection.onchange ? true : false
+                } : null;
+            }
+
+            // 7. Storage Quota Analysis
+            async function getStorageDetails() {
+                try {
+                    if ('storage' in navigator && 'estimate' in navigator.storage) {
+                        const estimate = await navigator.storage.estimate();
+                        const persisted = await navigator.storage.persisted();
+                        return {
+                            quota: estimate.quota,
+                            usage: estimate.usage,
+                            persisted: persisted,
+                            usageDetails: estimate.usageDetails || null
+                        };
+                    }
+                    return null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // 8. CPU Architecture Detection
+            function getCPUArchitecture() {
+                try {
+                    const platform = navigator.platform.toLowerCase();
+                    if (platform.includes('arm')) return 'ARM';
+                    if (platform.includes('x86_64') || platform.includes('win64')) return 'x64';
+                    if (platform.includes('x86') || platform.includes('win32')) return 'x86';
+                    if (platform.includes('mac')) return navigator.userAgent.includes('Intel') ? 'x64' : 'ARM';
+                    return 'unknown';
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // 9. Battery Status (Modern API)
+            async function getBatteryStatus() {
+                try {
+                    if ('getBattery' in navigator) {
+                        const battery = await navigator.getBattery();
+                        return {
+                            level: battery.level,
+                            charging: battery.charging,
+                            chargingTime: battery.chargingTime,
+                            dischargingTime: battery.dischargingTime
+                        };
+                    }
+                    return null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // 10. System Clock Analysis
+            function getClockDetails() {
+                return {
+                    timezoneOffset: new Date().getTimezoneOffset(),
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    clockDrift: performance.now() - Date.now(),
+                    resolution: performance.timeOrigin ? performance.timeOrigin : null
+                };
+            }
+
+            // Hashing function
+            function hashData(data) {
+                let hash = 0;
+                const str = typeof data === 'string' ? data : JSON.stringify(data);
+                for (let i = 0; i < str.length; i++) {
+                    hash = (hash << 7) - hash + str.charCodeAt(i);
+                    hash |= 0;
+                }
+                return 'fp-' + Math.abs(hash).toString(36);
+            }
+
+            // Generate the complete fingerprint
+            const fingerprint = {
+                timestamp: new Date().toISOString(),
+                mediaDevices: await getMediaDevices(),
+                webGL: getWebGLDetails(),
+                audio: await getAudioContextDetails(),
+                keyboard: getKeyboardLayout(),
+                screen: getScreenDetails(),
+                network: getNetworkInfo(),
+                storage: await getStorageDetails(),
+                cpu: getCPUArchitecture(),
+                battery: await getBatteryStatus(),
+                clock: getClockDetails(),
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                hardwareConcurrency: navigator.hardwareConcurrency,
+                deviceMemory: navigator.deviceMemory,
+                doNotTrack: navigator.doNotTrack,
+                pdfViewerEnabled: navigator.pdfViewerEnabled,
+                maxTouchPoints: navigator.maxTouchPoints,
+                cookieEnabled: navigator.cookieEnabled
+            };
+
+            // Add composite hash
+            fingerprint.compositeHash = hashData(JSON.stringify(fingerprint));
+
+            // Display results
+            document.getElementById('fingerprintData').textContent = 
+                JSON.stringify(fingerprint, null, 2);
+
+            // Download functionality
+            document.getElementById('downloadBtn').addEventListener('click', () => {
+                const data = JSON.stringify(fingerprint, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ultimate_fingerprint_${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        })();
+    </script>
+</body>
+</html>
