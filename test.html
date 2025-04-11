@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload JSON</title>
+</head>
+<body>
+    <h1>Upload JSON to the Server</h1>
+    <input type="file" id="jsonFile" accept=".json" />
+    <button id="uploadBtn">Upload JSON</button>
+
+    <script>
+        document.getElementById('uploadBtn').onclick = function() {
+            const fileInput = document.getElementById('jsonFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a JSON file to upload.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const jsonData = event.target.result;
+
+                // Send the JSON data to the PythonAnywhere server
+                fetch('https://<your-username>.pythonanywhere.com/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: jsonData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Success: ' + JSON.stringify(data));
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Upload failed!');
+                });
+            };
+
+            reader.readAsText(file);
+        };
+    </script>
+</body>
+</html>
