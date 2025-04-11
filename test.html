@@ -6,12 +6,12 @@
     <title>Upload JSON</title>
 </head>
 <body>
-    <h1>Upload JSON to the Server</h1>
-    <input type="file" id="jsonFile" accept=".json" />
-    <button id="uploadBtn">Upload JSON</button>
+    <h1>Upload JSON File</h1>
+    <input type="file" id="jsonFile" accept=".json">
+    <button id="uploadButton">Upload</button>
 
     <script>
-        document.getElementById('uploadBtn').onclick = function() {
+        document.getElementById('uploadButton').addEventListener('click', function() {
             const fileInput = document.getElementById('jsonFile');
             const file = fileInput.files[0];
 
@@ -20,30 +20,23 @@
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const jsonData = event.target.result;
+            const formData = new FormData();
+            formData.append('file', file);
 
-                // Send the JSON data to the PythonAnywhere server
-                fetch('https://<your-username>.pythonanywhere.com/upload', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: jsonData,
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert('Success: ' + JSON.stringify(data));
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Upload failed!');
-                });
-            };
-
-            reader.readAsText(file);
-        };
+            fetch('https://yourusername.pythonanywhere.com/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                alert('File uploaded successfully!');
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('Error uploading file.');
+            });
+        });
     </script>
 </body>
 </html>
