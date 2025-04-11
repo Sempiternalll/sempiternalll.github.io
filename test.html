@@ -3,40 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload JSON</title>
+    <title>Auto Send JSON</title>
 </head>
 <body>
-    <h1>Upload JSON File</h1>
-    <input type="file" id="jsonFile" accept=".json">
-    <button id="uploadButton">Upload</button>
+    <h1>Sending JSON Data</h1>
+    <p>Data is being sent to the server...</p>
 
     <script>
-        document.getElementById('uploadButton').addEventListener('click', function() {
-            const fileInput = document.getElementById('jsonFile');
-            const file = fileInput.files[0];
+        // Create a JSON object
+        const jsonData = {
+            name: "John Doe",
+            age: 30,
+            email: "john.doe@example.com"
+        };
 
-            if (!file) {
-                alert('Please select a JSON file to upload.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('https://yourusername.pythonanywhere.com/upload', {
+        // Function to send JSON data to the server
+        function sendData(data) {
+            fetch('https://yourusername.pythonanywhere.com/upload', { // Change this URL to your server endpoint
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
             })
             .then(response => response.json())
             .then(data => {
                 console.log('Success:', data);
-                alert('File uploaded successfully!');
+                alert('Data sent successfully!');
             })
             .catch((error) => {
                 console.error('Error:', error);
-                alert('Error uploading file.');
+                alert('Error sending data.');
             });
-        });
+        }
+
+        // Send the data when the page loads
+        window.onload = function() {
+            sendData(jsonData);
+        };
     </script>
 </body>
 </html>
