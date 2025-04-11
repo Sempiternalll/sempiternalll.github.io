@@ -1,46 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Send JSON</title>
+    <title>Send JSON to Server</title>
 </head>
 <body>
-    <h1>Sending JSON Data</h1>
-    <p>Data is being sent to the server...</p>
-
     <script>
-        // Create a JSON object
+        // Your JSON data (replace with your actual data)
         const jsonData = {
-            name: "John Doe",
-            age: 30,
-            email: "john.doe@example.com"
+            key1: "value1",
+            key2: "value2"
         };
 
-        // Function to send JSON data to the server
-        function sendData(data) {
-            fetch('https://yourusername.pythonanywhere.com/upload', { // Change this URL to your server endpoint
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                alert('Data sent successfully!');
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert('Error sending data.');
-            });
-        }
-
-        // Send the data when the page loads
-        window.onload = function() {
-            sendData(jsonData);
-        };
+        // Send JSON to the server
+        fetch('https://nukewanderer.eu.pythonanywhere.com/receive-json', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(jsonData),
+        })
+        .then(response => response.json())
+        .then(data => console.log('Success:', data))
+        .catch(error => console.error('Error:', error));
     </script>
 </body>
 </html>
